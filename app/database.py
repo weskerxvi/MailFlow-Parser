@@ -1,4 +1,17 @@
-import re
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-h = re.search('h', 'asdfghh')
-print(h.group(0))
+DATABASE_URL = "sqlite:///./rpa.db"
+
+class Base(DeclarativeBase):
+    pass
+ 
+ 
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    connect_args={"check_same_thread": False}
+)
+
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False,bind=engine)
