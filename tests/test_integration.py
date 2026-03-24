@@ -24,7 +24,6 @@ def test_parser_to_database_flow(session, monkeypatch):
     def override_session():
         return session
  
-    # monkeypatch aponta para onde SessionLocal é realmente usado
     monkeypatch.setattr("app.services.process_email.SessionLocal", override_session)
  
     text = "Pedido #123 - Cliente João - Valor 250"
@@ -33,6 +32,7 @@ def test_parser_to_database_flow(session, monkeypatch):
     create_order(data)
  
     result = session.query(Order).first()
+
  
     assert result.number == 123
     assert result.client == "João" 

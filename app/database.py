@@ -2,8 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 DATABASE_URL = "sqlite:///./rpa.db"
- 
- 
+
 class Base(DeclarativeBase):
     pass
  
@@ -13,7 +12,6 @@ engine = create_engine(
     echo=True,
     connect_args={"check_same_thread": False}
 )
- 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
- 
- 
+
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False,bind=engine)
