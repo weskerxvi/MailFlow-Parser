@@ -47,9 +47,9 @@ def generate_csv_report(value, output_path=None):
         path = output_path
     now = datetime.now()
 
-    formated_data = now.strftime('%d-%m-%Y')
+    formated_date = now.strftime('%d-%m-%Y')
 
-    archive = path / f"reports-{formated_data}.csv"
+    archive = path / f"reports-{formated_date}.csv"
     archive.touch()
 
     list_order = [[item.number, item.client, item.value] for item in value]
