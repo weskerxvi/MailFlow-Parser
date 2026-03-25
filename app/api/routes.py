@@ -17,9 +17,9 @@ def get_orders(db: Session = Depends(get_db)):
 @router.post("/process")
 def process_emails(db: Session = Depends(get_db)):
     emails = email_reader()
-    for email in emails:
-        data = extract_data(email)
+    data_list = extract_data(emails)
 
+    for data in data_list:
         if not data:
             continue
 
