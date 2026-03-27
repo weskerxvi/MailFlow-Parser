@@ -6,7 +6,7 @@ from app.database import Base
  
 class Order(Base):
     __tablename__ = "orders"
- 
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     number: Mapped[int] = mapped_column(Integer)
     client: Mapped[str] = mapped_column(String)
@@ -15,3 +15,4 @@ class Order(Base):
         DateTime,
         default= lambda: datetime.now(timezone.utc)
     )
+    
