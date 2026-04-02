@@ -8,7 +8,7 @@ import pytest
     ),
     (
         "Pedido #124 - Cliente Maria - Valor",
-        [{'number': '124', 'client': 'Maria', 'value': 'SEM VALOR'}]
+        [{'number': '124', 'client': 'Maria', 'value': 0}]
     ),
     (
         "Pedido #125 - Cliente Pedro - Valor 300.42",

@@ -56,7 +56,7 @@ def generate_csv_report(value, output_path=None):
 
     with open(archive, "w", newline="") as f:  
         writing_archive = csv.writer(f)
-        writing_archive.writerow(["number", "client", "value", "data"])
+        writing_archive.writerow(["number", "client", "value"])
         writing_archive.writerows(list_order)
 
 def run():

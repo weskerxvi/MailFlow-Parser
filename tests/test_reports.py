@@ -74,4 +74,4 @@ def test_gen_csv(tmp_path, session, monkeypatch):
     
 
     assert archive.exists()
-    assert ["123", "John", "250"] in rows
+    assert ["123", "John", '250.0'] in rows

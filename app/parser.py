@@ -16,8 +16,7 @@ def extract_data(text: str) -> list[dict]:
             value = value.strip()
 
             if not value:
-                value = "SEM VALOR"
-            
+                value = 0
             
             result.append({'number': number, 'client': client, 'value': value})
         

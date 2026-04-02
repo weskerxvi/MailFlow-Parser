@@ -36,4 +36,4 @@ def test_parser_to_database_flow(session, monkeypatch):
  
     assert result.number == 123
     assert result.client == "João" 
-    assert result.value == "250"
+    assert result.value == 250

@@ -6,8 +6,8 @@ def normalize_order(data: dict) -> dict:
 
     raw_value = data["value"]
 
-    if raw_value == "SEM VALOR" or not raw_value:
-        value = "SEM VALOR"
+    if raw_value == 0 or not raw_value:
+        value = 0
     else:
         value = (
             raw_value
@@ -20,7 +20,7 @@ def normalize_order(data: dict) -> dict:
         try:
             value = float(value)
         except:
-            value = "SEM VALOR"
+            value = 0
 
     return {
         "number": number,
