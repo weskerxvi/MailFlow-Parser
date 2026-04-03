@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 def normalize_order(data: dict) -> dict:
-    number = int(data["number"])
+    number = str(data["number"])
     client = data["client"].strip()
 
     raw_value = data["value"]
@@ -19,7 +19,7 @@ def normalize_order(data: dict) -> dict:
 
         try:
             value = float(value)
-        except:
+        except ValueError:
             value = 0
 
     return {

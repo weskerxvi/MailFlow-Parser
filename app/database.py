@@ -1,7 +1,10 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "sqlite:///./rpa.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./rpa.db")
+
+ECHO = os.getenv("DB_ECHO", "false").lower() == "true"
 
 class Base(DeclarativeBase):
     pass
@@ -9,7 +12,7 @@ class Base(DeclarativeBase):
  
 engine = create_engine(
     DATABASE_URL,
-    echo=True,
+    echo=ECHO,
     connect_args={"check_same_thread": False}
 )
 
