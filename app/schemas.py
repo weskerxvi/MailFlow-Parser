@@ -5,4 +5,4 @@ class OrderSchema(BaseModel):
 
     number: int
     client: str
-    value: str
+    value: float
