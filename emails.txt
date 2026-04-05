@@ -1,3 +1,5 @@
 Pedido #123 - Cliente João - Valor 250
 Pedido #124 - Cliente Maria - Valor 
 Pedido #8372 - Cliente Pablo - Valor R$300,42
+Pedido #83272 - Cliente Paula - Valor R$764,41
+Pedido #174 - Cliente Laura - Valor

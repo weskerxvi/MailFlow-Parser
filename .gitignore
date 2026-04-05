@@ -2,3 +2,8 @@ __pycache__/
 .env
 venv/
 .pytest_cache
+*.sqlite3
+*.pyc
+*.db
+app/reports/*.txt
+app/reports/*.csv

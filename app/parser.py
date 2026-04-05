@@ -11,14 +11,13 @@ def extract_data(text: str) -> list[dict]:
             )
         
         if match:
-            id, name, value = match.groups()
+            number, client, value = match.groups()
             
             value = value.strip()
 
             if not value:
-                value = "SEM VALOR"
+                value = 0
             
-            
-            result.append({'id': id, 'name': name, 'value': value})
+            result.append({'number': number, 'client': client, 'value': value})
         
     return result
