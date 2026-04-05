@@ -24,6 +24,7 @@ def create_order(order_list):
     finally:
         session.close()
 
+
 def run():
     raw_text = email_reader()
     orders = extract_data(raw_text)

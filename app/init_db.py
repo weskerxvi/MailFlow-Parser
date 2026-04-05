@@ -1,9 +1,5 @@
 from app.database import engine, Base
-from app.models import Base
-from app.database import engine
-
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
+from app.models import Order
 
 def init_db():
     Base.metadata.create_all(bind=engine)
