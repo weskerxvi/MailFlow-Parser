@@ -9,8 +9,8 @@ def create_order(order_list):
     try:
         for item in order_list:
             order = Order(
-                number=int(item["id"]),  
-                client=item["name"],
+                number=int(item["number"]),  
+                client=item["client"],
                 value=item["value"], 
             )
             session.add(order)

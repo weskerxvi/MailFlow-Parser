@@ -5,3 +5,5 @@ venv/
 *.sqlite3
 *.pyc
 *.db
+app/reports/*.txt
+app/reports/*.csv

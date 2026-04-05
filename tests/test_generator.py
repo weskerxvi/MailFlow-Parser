@@ -41,4 +41,4 @@ def test_get_generator(session, monkeypatch):
 
     assert result[0].number == 123
     assert result[0].client == "John" 
-    assert result[0].value == '250'
+    assert result[0].value == 250.0

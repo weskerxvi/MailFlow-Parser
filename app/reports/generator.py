@@ -47,16 +47,16 @@ def generate_csv_report(value, output_path=None):
         path = output_path
     now = datetime.now()
 
-    formated_data = now.strftime('%d-%m-%Y')
+    formated_date = now.strftime('%d-%m-%Y')
 
-    archive = path / f"reports-{formated_data}.csv"
+    archive = path / f"reports-{formated_date}.csv"
     archive.touch()
 
     list_order = [[item.number, item.client, item.value] for item in value]
 
     with open(archive, "w", newline="") as f:  
         writing_archive = csv.writer(f)
-        writing_archive.writerow(["number", "client", "value", "data"])
+        writing_archive.writerow(["number", "client", "value"])
         writing_archive.writerows(list_order)
 
 def run():
