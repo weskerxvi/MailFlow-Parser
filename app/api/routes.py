@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -10,6 +12,7 @@ from app.services.reports import generate_report
 
 from app.services.normalize_order import normalize_order
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -35,7 +38,7 @@ def process_emails(db: Session = Depends(get_db)):
         ).first()
 
         if existing_order:
-            print(f"Updated duplicate: {normalized['number']}")
+            logger.info(f"Updated duplicate: {normalized['number']}")
             existing_order.client = normalized["client"]
             existing_order.value = normalized["value"]
             duplicates += 1
@@ -53,9 +56,9 @@ def process_emails(db: Session = Depends(get_db)):
 
     try:
         db.commit()
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise e
+        raise 
 
     return {
         "message": "Emails processed successfully.",

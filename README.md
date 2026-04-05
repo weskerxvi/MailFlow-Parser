@@ -1,133 +1,129 @@
-# MailFlow Parser
+# 📬 MailFlow Parser
 
-API e automacao simples para ler emails em texto, extrair pedidos, normalizar os dados e salvar os resultados em um banco SQLite.
+A simple API and automation system to read text-based emails, extract order data, normalize it, and store the results in a SQLite database.
 
-Este projeto foi construido como estudo de backend com Python e mostra um fluxo completo de:
+> ⚠️ **Note:** This project is a **Minimum Viable Product (MVP)** and is currently under active development. Planned improvements include PostgreSQL integration, Gmail API integration, and API enhancements.
 
-- leitura de entrada textual
-- parser com regex
-- normalizacao de dados
-- persistencia com SQLAlchemy
-- exposicao via FastAPI
-- testes com pytest
-- geracao de relatorios
+---
 
-## Objetivo do projeto
+## 📌 Project Objective
 
-O projeto simula um pequeno sistema de RPA/email processing. A ideia e receber mensagens com um formato padrao, identificar os dados do pedido e transformar essa entrada nao estruturada em registros organizados para consulta e relatorio.
+This project simulates a small RPA/email processing system.
 
-Exemplo de linha processada:
+The goal is to take semi-structured input (emails), extract relevant order data, and transform it into structured records for querying and reporting.
+
+### Example input:
 
 ```text
-Pedido #123 - Cliente Joao Silva - Valor R$250,42
+Pedido #123 - Cliente Paula - Valor R$764,41
 ```
 
-## Stack utilizada
+---
 
-- Python
-- FastAPI
-- SQLAlchemy
-- SQLite
-- Pydantic
-- pytest
-- Regex
+## 🚀 Tech Stack
 
-## Como o sistema funciona
+- Python  
+- FastAPI  
+- SQLAlchemy  
+- SQLite  
+- Pydantic  
+- pytest  
+- Regex  
 
-O fluxo principal e este:
+---
 
-1. O sistema le o conteudo do arquivo `emails.txt`.
-2. O parser procura linhas no formato `Pedido #<numero> - Cliente <nome> - Valor <valor>`.
-3. Cada item extraido e normalizado.
-4. Os pedidos sao gravados no banco `rpa.db`.
-5. A API permite consultar os pedidos e gerar um resumo.
-6. O modulo de relatorios tambem pode gerar arquivos `.txt` e `.csv`.
+## ⚙️ How It Works
 
-## Estrutura do projeto
+1. The system reads data from the `emails.txt` file  
+2. A parser extracts data using regex  
+3. The extracted data is normalized  
+4. Orders are stored in the `rpa.db` database  
+5. The API exposes endpoints for querying and reporting  
+6. Reports can be generated in `.txt` and `.csv`  
+
+---
+
+## 🗂️ Project Structure
 
 ```text
 rpa-email-system/
-|-- app/
-|   |-- api/
-|   |   `-- routes.py
-|   |-- reports/
-|   |   `-- generator.py
-|   |-- services/
-|   |   |-- normalize_order.py
-|   |   |-- process_email.py
-|   |   `-- reports.py
-|   |-- database.py
-|   |-- email_reader.py
-|   |-- main.py
-|   |-- models.py
-|   |-- parser.py
-|   `-- schemas.py
-|-- tests/
-|-- emails.txt
-|-- requirements.txt
-`-- rpa.db
+│-- app/
+│   │-- api/
+│   │   └── routes.py
+│   │-- reports/
+│   │   └── generator.py
+│   │-- services/
+│   │   │-- normalize_order.py
+│   │   │-- process_email.py
+│   │   └── reports.py
+│   │-- database.py
+│   │-- email_reader.py
+│   │-- main.py
+│   │-- models.py
+│   │-- parser.py
+│   │-- init_db.py
+│   │-- parser.py
+│   └── schemas.py
+│-- tests/
+│-- emails.txt
+│-- requirements.txt
+└── rpa.db
 ```
 
-## Papel de cada arquivo principal
+---
 
-- `app/main.py`: cria a aplicacao FastAPI e registra as rotas.
-- `app/api/routes.py`: define os endpoints para processar emails, listar pedidos e gerar resumo.
-- `app/parser.py`: extrai numero, cliente e valor a partir do texto bruto.
-- `app/services/normalize_order.py`: limpa e padroniza os dados extraidos.
-- `app/database.py`: configura engine, sessao e conexao com SQLite.
-- `app/models.py`: define o modelo `Order`.
-- `app/schemas.py`: define o schema de resposta da API.
-- `app/services/reports.py`: calcula metricas agregadas dos pedidos.
-- `app/reports/generator.py`: gera arquivos de relatorio em TXT e CSV.
-- `app/services/process_email.py`: executa o fluxo fora da API, diretamente por script.
+## ▶️ Running Locally
 
-## Como executar localmente
+### 1. Create and activate a virtual environment
 
-### 1. Criar e ativar ambiente virtual
-
-No Windows PowerShell:
-
-```powershell
+```bash
 python -m venv venv
-.\venv\Scripts\Activate.ps1
+# Windows
+.\venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
 ```
 
-### 2. Instalar dependencias
+---
 
-```powershell
+### 2. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Iniciar a API
+---
 
-```powershell
+### 3. Start the API
+
+```bash
 uvicorn app.main:app --reload
 ```
 
-A API ficara disponivel em:
+Access:
 
-- `http://127.0.0.1:8000`
-- Documentacao Swagger: `http://127.0.0.1:8000/docs`
+- http://127.0.0.1:8000  
+- http://127.0.0.1:8000/docs  
 
-## Como usar
+---
 
-Antes de processar, coloque no arquivo `emails.txt` uma ou mais linhas no formato esperado.
+## 📥 Usage
 
-Exemplo:
+Add lines to `emails.txt`:
 
 ```text
-Pedido #123 - Cliente Joao Silva - Valor 250
-Pedido #124 - Cliente Maria Souza - Valor R$320,90
+Pedido #123 - Cliente John Doe - Valor 250
+Pedido #124 - Cliente Maria Souza - Valor R$320.90
 Pedido #125 - Cliente Pedro Lima - Valor
 ```
 
-### Endpoints disponiveis
+---
 
-#### `POST /process`
+## 🔗 Endpoints
 
-Le o arquivo `emails.txt`, extrai os pedidos, normaliza os dados e grava no banco.
+### `POST /process`
 
-Resposta esperada:
+Processes the emails and stores valid orders.
 
 ```json
 {
@@ -137,68 +133,62 @@ Resposta esperada:
 }
 ```
 
-#### `GET /orders`
+---
 
-Lista os pedidos salvos no banco.
+### `GET /orders`
 
-#### `GET /reports`
+Returns all stored orders.
 
-Retorna um resumo com:
+---
 
-- quantidade total de pedidos
-- valor total somado
-- quantidade de pedidos sem valor
+### `GET /reports`
 
-## Geracao de relatorios em arquivo
+Returns:
 
-O modulo `app/reports/generator.py` gera relatorios em TXT e CSV com base nos pedidos salvos no banco.
+- total number of orders  
+- total value  
+- number of orders without value  
 
-Para executar manualmente:
+---
 
-```powershell
+## 📊 Reports
+
+Generate reports manually:
+
+```bash
 python -m app.reports.generator
 ```
 
-Arquivos gerados:
+Generated files:
 
-- `reports-dd-mm-aaaa.txt`
-- `reports-dd-mm-aaaa.csv`
+- `reports-dd-mm-yyyy.txt`  
+- `reports-dd-mm-yyyy.csv`  
 
-## Executando os testes
+---
 
-```powershell
+## 🧪 Running Tests
+
+```bash
 pytest
 ```
 
-Ou, se estiver usando o executavel do ambiente virtual:
+---
 
-```powershell
-.\venv\Scripts\pytest.exe
-```
+## 🛠️ Roadmap
 
-## Pontos tecnicos demonstrados neste projeto
+This project is evolving beyond the MVP. Planned improvements:
 
-- criacao de API REST com FastAPI
-- uso de ORM com SQLAlchemy
-- modelagem simples de dados
-- parser de texto com regex
-- tratamento basico de dados inconsistentes
-- testes unitarios e de integracao
-- separacao em camadas (`api`, `services`, `reports`, `models`)
+- PostgreSQL integration  
+- Gmail API integration  
+- Improved validation with Pydantic  
+- Environment-based configuration  
+- Structured logging  
+- Database migrations with Alembic  
+- Improved API design  
+- Better test coverage  
 
-## Melhorias planejadas
+---
 
-Estas sao melhorias naturais para evoluir o projeto:
+## 📄 License
 
-- mover configuracoes para variaveis de ambiente
-- melhorar validacao dos dados com Pydantic
-- adicionar logs estruturados
-- evitar arquivos de exemplo e banco versionados no repositorio
-- adicionar migracoes com Alembic
-- melhorar a documentacao de deploy
-- tratar melhor duplicidade diretamente no banco
-- reforcar cobertura de testes de API
-
-## Licenca
-
-Este projeto esta sob a licenca MIT. Veja o arquivo `LICENSE` para mais detalhes.
+MIT License. See the `LICENSE` file for details.
