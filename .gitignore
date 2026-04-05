@@ -2,8 +2,12 @@ __pycache__/
 .env
 venv/
 .pytest_cache
+.pytest_tmp/
 *.sqlite3
 *.pyc
 *.db
 app/reports/*.txt
 app/reports/*.csv
+generated_reports/
+credentials.json
+token.json
