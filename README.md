@@ -46,7 +46,9 @@ It then:
 - Normalize client and value fields
 - Store orders in PostgreSQL
 - Prevent duplicate order numbers at database level
+- Track each processing run with status and metrics
 - List saved orders through the API
+- List processing history through the API
 - Generate summary data with totals and missing-value count
 - Generate TXT and CSV report files
 
@@ -104,9 +106,23 @@ The routes in [routes.py](C:/Users/wsku6/Documents/rpa-email-system/app/api/rout
 
 - process the local email file
 - list stored orders
+- inspect processing history
 - get a report summary
 
-### 6. Generate report files
+### 6. Track processing runs
+
+Every execution of `POST /process` creates a processing run with:
+
+- status
+- total lines read
+- total parsed orders
+- created orders
+- updated existing orders
+- ignored lines
+- failed items
+- start and finish timestamps
+
+### 7. Generate report files
 
 [generator.py](C:/Users/wsku6/Documents/rpa-email-system/app/reports/generator.py) creates TXT and CSV files based on the stored orders.
 
@@ -179,9 +195,18 @@ Example response:
 
 ```json
 {
+  "run_id": 15,
+  "status": "completed",
   "message": "Emails processed successfully.",
+  "total_read": 3,
+  "total_parsed": 2,
   "created": 2,
-  "duplicates": 1
+  "updated": 1,
+  "duplicates": 1,
+  "ignored": 1,
+  "failed": 0,
+  "started_at": "2026-05-13T10:00:00",
+  "finished_at": "2026-05-13T10:00:01"
 }
 ```
 
@@ -196,6 +221,14 @@ Returns a summary with:
 - total number of orders
 - total order value
 - number of orders without value
+
+### `GET /processing-runs`
+
+Returns the history of processing executions.
+
+### `GET /processing-runs/{run_id}`
+
+Returns the metrics and status of a specific processing execution.
 
 ## Report Files
 
@@ -237,7 +270,7 @@ This project shows practical backend skills such as:
 - structured logging
 - Alembic migrations
 - stronger validation with Pydantic
-- API tests with FastAPI `TestClient`
+- more API tests with FastAPI `TestClient`
 - improved error handling
 
 ## License
