@@ -2,7 +2,7 @@
 
 MailFlow Parser is a backend project built with FastAPI to read order data from email-like text, normalize the content, persist the records in PostgreSQL, and expose the results through an API.
 
-The project was created as a portfolio piece focused on backend fundamentals:
+The project focuses on backend engineering practices such as:
 
 - text parsing with regex
 - data normalization
@@ -250,21 +250,26 @@ The files are generated based on the records already stored in the database.
 pytest
 ```
 
-## Notes About Gmail
+## Engineering Highlights
 
-The project is being prepared for Gmail integration, but Gmail processing is not active in the current application flow yet.
+This project demonstrates backend practices such as:
 
-The Gmail-related packages are already present in the project dependencies for the next implementation step.
+- API development with FastAPI
+- ORM-based persistence with SQLAlchemy
+- PostgreSQL-ready database configuration
+- layered architecture with API, services, parser, schemas, and reports
+- semi-structured data parsing and normalization
+- duplicate handling and update behavior for existing orders
+- processing audit trail with execution status and metrics
+- automated tests covering parser, reports, database flow, API endpoints, and pipeline behavior
 
-## Next Improvements
+## Technical Roadmap
 
-- Gmail API integration
-- better API response schemas
-- structured logging
-- Alembic migrations
-- stronger validation with Pydantic
-- more API tests with FastAPI `TestClient`
-- improved error handling
+- Add Alembic migrations for schema versioning
+- Add structured logging for processing runs and API requests
+- Expand API response schemas for stronger contracts
+- Add item-level processing error records
+- Containerize the application with Docker and PostgreSQL
 
 ## License
 
