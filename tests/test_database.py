@@ -23,7 +23,7 @@ def test_insert_order(session):
     order = Order(
         number=123,       
         client="John",   
-        value="250"
+        value=250.0
     )
  
     session.add(order)
@@ -33,3 +33,4 @@ def test_insert_order(session):
  
     assert result.number == 123
     assert result.client == "John" 
+    assert result.value == 250.0

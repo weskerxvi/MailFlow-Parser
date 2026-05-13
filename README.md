@@ -63,7 +63,7 @@ rpa-email-system/
 |   |   `-- generator.py
 |   |-- services/
 |   |   |-- normalize_order.py
-|   |   |-- process_email.py
+|   |   |-- order_pipeline.py
 |   |   `-- reports.py
 |   |-- database.py
 |   |-- email_reader.py
@@ -96,11 +96,15 @@ The parser in [parser.py](C:/Users/wsku6/Documents/rpa-email-system/app/parser.p
 
 The service in [normalize_order.py](C:/Users/wsku6/Documents/rpa-email-system/app/services/normalize_order.py) cleans and standardizes the extracted values before saving them.
 
-### 4. Persist in PostgreSQL
+### 4. Run the processing pipeline
+
+The pipeline in [order_pipeline.py](C:/Users/wsku6/Documents/rpa-email-system/app/services/order_pipeline.py) orchestrates parsing, normalization, persistence, duplicate handling, and processing run metrics.
+
+### 5. Persist in PostgreSQL
 
 The database connection is configured in [database.py](C:/Users/wsku6/Documents/rpa-email-system/app/database.py), and the order model is defined in [models.py](C:/Users/wsku6/Documents/rpa-email-system/app/models.py).
 
-### 5. Expose the results
+### 6. Expose the results
 
 The routes in [routes.py](C:/Users/wsku6/Documents/rpa-email-system/app/api/routes.py) allow the user to:
 
@@ -109,7 +113,7 @@ The routes in [routes.py](C:/Users/wsku6/Documents/rpa-email-system/app/api/rout
 - inspect processing history
 - get a report summary
 
-### 6. Track processing runs
+### 7. Track processing runs
 
 Every execution of `POST /process` creates a processing run with:
 
@@ -122,7 +126,7 @@ Every execution of `POST /process` creates a processing run with:
 - failed items
 - start and finish timestamps
 
-### 7. Generate report files
+### 8. Generate report files
 
 [generator.py](C:/Users/wsku6/Documents/rpa-email-system/app/reports/generator.py) creates TXT and CSV files based on the stored orders.
 
@@ -251,17 +255,6 @@ pytest
 The project is being prepared for Gmail integration, but Gmail processing is not active in the current application flow yet.
 
 The Gmail-related packages are already present in the project dependencies for the next implementation step.
-
-## Why This Project Is Useful For Portfolio
-
-This project shows practical backend skills such as:
-
-- building APIs with FastAPI
-- using SQLAlchemy with PostgreSQL
-- parsing and transforming semi-structured data
-- organizing code into layers
-- creating unit and integration tests
-- thinking about future integrations and scalability
 
 ## Next Improvements
 
