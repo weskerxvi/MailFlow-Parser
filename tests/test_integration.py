@@ -3,37 +3,36 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database import Base
-from app.models import Order
-from app.parser import extract_data
-from app.services.process_email import create_order
+from app.models import Order, ProcessingRun
+from app.services.order_pipeline import process_orders_from_email
 
 
 @pytest.fixture
 def session():
     engine = create_engine("sqlite:///:memory:")
     TestingSession = sessionmaker(bind=engine)
- 
+
     Base.metadata.create_all(bind=engine)
- 
+
     session = TestingSession()
     yield session
     session.close()
- 
- 
-def test_parser_to_database_flow(session, monkeypatch):
-    def override_session():
-        return session
- 
-    monkeypatch.setattr("app.services.process_email.SessionLocal", override_session)
- 
-    text = "Pedido #123 - Cliente João - Valor 250"
- 
-    data = extract_data(text)
-    create_order(data)
- 
-    result = session.query(Order).first()
 
- 
-    assert result.number == 123
-    assert result.client == "João" 
-    assert result.value == 250
+
+def test_email_processing_pipeline_to_database_flow(session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.order_pipeline.email_reader",
+        lambda: "Pedido #123 - Cliente Joao - Valor 250",
+    )
+
+    result = process_orders_from_email(session)
+
+    order = session.query(Order).first()
+    run = session.query(ProcessingRun).first()
+
+    assert result["status"] == "completed"
+    assert result["created"] == 1
+    assert order.number == 123
+    assert order.client == "Joao"
+    assert order.value == 250
+    assert run.total_parsed == 1
