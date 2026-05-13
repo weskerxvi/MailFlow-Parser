@@ -3,4 +3,9 @@ uvicorn
 sqlalchemy
 pydantic
 pytest
-env
+httpx
+python-dotenv
+psycopg2-binary
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
