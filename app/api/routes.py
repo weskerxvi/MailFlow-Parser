@@ -1,18 +1,11 @@
-import logging
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.parser import extract_data
-from app.email_reader import email_reader
-from app.models import Order
-from app.schemas import OrderSchema
+from app.models import Order, ProcessingRun
+from app.schemas import OrderSchema, ProcessingRunSchema
+from app.services.order_pipeline import process_orders_from_email
 from app.services.reports import generate_report
-
-from app.services.normalize_order import normalize_order
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -23,51 +16,29 @@ def get_orders(db: Session = Depends(get_db)):
 
 @router.post("/process")
 def process_emails(db: Session = Depends(get_db)):
-    
-    emails = email_reader()
-    duplicates = 0
-    created = 0
-    parsed = extract_data(emails)
-    
-    for item in parsed:
-        normalized = normalize_order(item)
-
-        
-        existing_order = db.query(Order).filter(
-            Order.number == normalized["number"]
-        ).first()
-
-        if existing_order:
-            logger.info(f"Updated duplicate: {normalized['number']}")
-            existing_order.client = normalized["client"]
-            existing_order.value = normalized["value"]
-            duplicates += 1
-
-            continue
-
-        order = Order(
-            number=normalized["number"],
-            client=normalized["client"],
-            value=normalized["value"]
-        )
-
-        db.add(order)
-        created += 1
-
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise 
-
-    return {
-        "message": "Emails processed successfully.",
-        "created": created,
-        "duplicates": duplicates
-}
+    return process_orders_from_email(db)
 
 @router.get("/reports")
 def get_report(db: Session = Depends(get_db)):
     orders = db.query(Order).all()
 
     return generate_report(orders)
+
+
+@router.get("/processing-runs", response_model=list[ProcessingRunSchema])
+def get_processing_runs(db: Session = Depends(get_db)):
+    return (
+        db.query(ProcessingRun)
+        .order_by(ProcessingRun.started_at.desc())
+        .all()
+    )
+
+
+@router.get("/processing-runs/{run_id}", response_model=ProcessingRunSchema)
+def get_processing_run(run_id: int, db: Session = Depends(get_db)):
+    run = db.get(ProcessingRun, run_id)
+
+    if not run:
+        raise HTTPException(status_code=404, detail="Processing run not found.")
+
+    return run
