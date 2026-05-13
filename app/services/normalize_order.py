@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 def normalize_order(data: dict) -> dict:
     number = str(data["number"])
     client = data["client"].strip()
