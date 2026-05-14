@@ -1,4 +1,5 @@
 import base64
+import json
 
 import pytest
 
@@ -78,6 +79,31 @@ def test_load_credentials_raises_when_credentials_are_missing(
 ):
     monkeypatch.setenv("GMAIL_TOKEN_FILE", str(tmp_path / "token.json"))
     monkeypatch.setenv("GMAIL_CREDENTIALS_FILE", str(tmp_path / "credentials.json"))
+
+    with pytest.raises(ConfigurationError):
+        _load_credentials()
+
+
+def test_load_credentials_reads_token_from_environment(monkeypatch):
+    token = {
+        "token": "access-token",
+        "refresh_token": "refresh-token",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": "client-id",
+        "client_secret": "client-secret",
+        "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+        "expiry": "2099-01-01T00:00:00Z",
+    }
+    monkeypatch.setenv("GMAIL_TOKEN_JSON", json.dumps(token))
+
+    credentials = _load_credentials()
+
+    assert credentials.token == "access-token"
+    assert credentials.refresh_token == "refresh-token"
+
+
+def test_load_credentials_rejects_invalid_token_json(monkeypatch):
+    monkeypatch.setenv("GMAIL_TOKEN_JSON", "{")
 
     with pytest.raises(ConfigurationError):
         _load_credentials()

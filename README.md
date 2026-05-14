@@ -148,9 +148,11 @@ GMAIL_QUERY=subject:Pedido newer_than:7d
 GMAIL_MAX_RESULTS=10
 GMAIL_CREDENTIALS_FILE=credentials.json
 GMAIL_TOKEN_FILE=token.json
+GMAIL_CREDENTIALS_JSON=
+GMAIL_TOKEN_JSON=
 ```
 
-Gmail credentials are intentionally loaded from local files and must not be committed to the repository.
+Gmail credentials can be loaded from local files during development or from `GMAIL_CREDENTIALS_JSON` and `GMAIL_TOKEN_JSON` in hosted environments. Secrets must not be committed to the repository.
 
 ## PostgreSQL Setup
 
@@ -208,6 +210,28 @@ Available URLs:
 - `http://127.0.0.1:8000/docs`
 
 For Gmail processing in Docker, keep `credentials.json` and `token.json` in the project root. Both files are ignored by Git.
+
+## Production Deployment
+
+The application is ready to run as a Docker web service with a managed PostgreSQL database.
+
+Recommended production settings:
+
+```env
+DATABASE_URL=postgresql+psycopg2://USER:PASSWORD@HOST:PORT/DATABASE
+DB_ECHO=false
+LOG_LEVEL=INFO
+GMAIL_QUERY=subject:Pedido newer_than:7d
+GMAIL_MAX_RESULTS=10
+GMAIL_CREDENTIALS_JSON={...}
+GMAIL_TOKEN_JSON={...}
+```
+
+The Docker start command runs migrations before starting the API:
+
+```text
+alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
 ## Example Input
 

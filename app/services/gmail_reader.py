@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 import os
 from pathlib import Path
@@ -64,31 +65,63 @@ def extract_message_body(message_data: dict) -> str:
 
 
 def _load_credentials() -> Credentials:
+    token_json = os.getenv("GMAIL_TOKEN_JSON")
+    credentials_json = os.getenv("GMAIL_CREDENTIALS_JSON")
     token_path = Path(os.getenv("GMAIL_TOKEN_FILE", "token.json"))
     credentials_path = Path(os.getenv("GMAIL_CREDENTIALS_FILE", "credentials.json"))
     credentials = None
 
-    if not credentials_path.exists() and not token_path.exists():
-        raise ConfigurationError("Gmail credentials file was not found.")
+    if token_json:
+        try:
+            credentials = Credentials.from_authorized_user_info(
+                json.loads(token_json),
+                SCOPES,
+            )
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ConfigurationError("Gmail token JSON is invalid.") from exc
 
-    if token_path.exists():
+    if not credentials and token_path.exists():
         try:
             credentials = Credentials.from_authorized_user_file(token_path, SCOPES)
         except ValueError as exc:
             raise ConfigurationError("Gmail token file is invalid.") from exc
 
+    if (
+        not credentials
+        and not credentials_json
+        and not credentials_path.exists()
+    ):
+        raise ConfigurationError("Gmail credentials file was not found.")
+
     if credentials and credentials.valid:
         return credentials
 
     if credentials and credentials.expired and credentials.refresh_token:
-        credentials.refresh(Request())
+        try:
+            credentials.refresh(Request())
+            if not token_json:
+                token_path.write_text(credentials.to_json())
+            return credentials
+        except Exception as exc:
+            raise ExternalServiceError("Failed to refresh Gmail token.") from exc
+
+    if credentials_json:
+        try:
+            flow = InstalledAppFlow.from_client_config(
+                json.loads(credentials_json),
+                SCOPES,
+            )
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ConfigurationError("Gmail credentials JSON is invalid.") from exc
     else:
         if not credentials_path.exists():
             raise ConfigurationError("Gmail credentials file was not found.")
         flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
-        credentials = flow.run_local_server(port=0)
 
-    token_path.write_text(credentials.to_json())
+    credentials = flow.run_local_server(port=0)
+
+    if not token_json:
+        token_path.write_text(credentials.to_json())
     return credentials
 
 
