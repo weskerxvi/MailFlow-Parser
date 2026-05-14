@@ -1,21 +1,12 @@
 # MailFlow Parser
 
-MailFlow Parser is a backend project built with FastAPI to read order data from email-like text, normalize the content, persist the records in PostgreSQL, and expose the results through an API.
+MailFlow Parser is a FastAPI backend for processing order data from local email-like text files and Gmail messages. It extracts semi-structured order information, normalizes the data, persists records in PostgreSQL, tracks each processing run, and exposes operational reports through a REST API.
 
-The project focuses on backend engineering practices such as:
+[Live API Docs](https://mailflow-parser.onrender.com/docs)
 
-- text parsing with regex
-- data normalization
-- REST API design
-- SQLAlchemy ORM
-- PostgreSQL integration
-- automated tests with pytest
+## Overview
 
-## Project Goal
-
-The idea is to simulate a small RPA/email processing workflow.
-
-The application receives semi-structured messages such as:
+The system receives messages in this format:
 
 ```text
 Pedido #123 - Cliente Paula - Valor R$764,41
@@ -23,40 +14,44 @@ Pedido #123 - Cliente Paula - Valor R$764,41
 
 It then:
 
-1. extracts the relevant order fields
-2. normalizes the values
-3. stores them in the database
-4. exposes the processed data through FastAPI
-5. generates summary reports
+1. reads messages from a local file or Gmail;
+2. parses order number, client, and value;
+3. normalizes values and client data;
+4. creates or updates orders in PostgreSQL;
+5. records processing metrics for auditing;
+6. exposes orders, reports, and processing history through FastAPI.
 
-## Current Stack
+## Features
+
+- Local file processing through `emails.txt`
+- Gmail processing with the Gmail API and read-only OAuth scope
+- Regex-based parsing for semi-structured order messages
+- Data normalization before persistence
+- PostgreSQL persistence with SQLAlchemy
+- Duplicate handling by order number
+- Processing run audit history
+- TXT and CSV report generation
+- Alembic migrations
+- Docker and Docker Compose setup
+- Structured logging
+- JSON error responses
+- CI with GitHub Actions
+- Automated tests with pytest
+
+## Tech Stack
 
 - Python
 - FastAPI
 - SQLAlchemy
 - PostgreSQL
 - Pydantic
-- pytest
-- python-dotenv
-- Gmail API
 - Alembic
+- Gmail API
 - Docker
+- pytest
+- GitHub Actions
 
-## Current Features
-
-- Read raw order data from `emails.txt`
-- Read order messages from Gmail through the Gmail API
-- Parse orders using regex
-- Normalize client and value fields
-- Store orders in PostgreSQL
-- Prevent duplicate order numbers at database level
-- Track each processing run with status and metrics
-- List saved orders through the API
-- List processing history through the API
-- Generate summary data with totals and missing-value count
-- Generate TXT and CSV report files
-
-## Project Structure
+## Architecture
 
 ```text
 rpa-email-system/
@@ -72,78 +67,60 @@ rpa-email-system/
 |   |   `-- reports.py
 |   |-- database.py
 |   |-- email_reader.py
-|   |-- init_db.py
+|   |-- exceptions.py
+|   |-- logging_config.py
 |   |-- main.py
 |   |-- models.py
 |   |-- parser.py
 |   `-- schemas.py
+|-- migrations/
 |-- tests/
-|-- emails.txt
-|-- requirements.txt
-`-- .env
+|-- Dockerfile
+|-- docker-compose.yml
+|-- alembic.ini
+`-- requirements.txt
 ```
 
-## How The Flow Works
+## API Endpoints
 
-### 1. Read input
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/process` | Processes local messages from `emails.txt`. |
+| `POST` | `/process/gmail` | Fetches matching Gmail messages and processes orders. |
+| `GET` | `/orders` | Lists persisted orders. |
+| `GET` | `/reports` | Returns aggregate order metrics. |
+| `GET` | `/processing-runs` | Lists processing execution history. |
+| `GET` | `/processing-runs/{run_id}` | Returns details for one processing run. |
 
-The application can read text from `emails.txt` through [email_reader.py](C:/Users/wsku6/Documents/rpa-email-system/app/email_reader.py) or fetch matching messages from Gmail through [gmail_reader.py](C:/Users/wsku6/Documents/rpa-email-system/app/services/gmail_reader.py).
+Example `POST /process/gmail` response:
 
-### 2. Parse the message
-
-The parser in [parser.py](C:/Users/wsku6/Documents/rpa-email-system/app/parser.py) uses regex to extract:
-
-- order number
-- client name
-- order value
-
-### 3. Normalize the data
-
-The service in [normalize_order.py](C:/Users/wsku6/Documents/rpa-email-system/app/services/normalize_order.py) cleans and standardizes the extracted values before saving them.
-
-### 4. Run the processing pipeline
-
-The pipeline in [order_pipeline.py](C:/Users/wsku6/Documents/rpa-email-system/app/services/order_pipeline.py) orchestrates parsing, normalization, persistence, duplicate handling, and processing run metrics.
-
-### 5. Persist in PostgreSQL
-
-The database connection is configured in [database.py](C:/Users/wsku6/Documents/rpa-email-system/app/database.py), and the order model is defined in [models.py](C:/Users/wsku6/Documents/rpa-email-system/app/models.py).
-
-### 6. Expose the results
-
-The routes in [routes.py](C:/Users/wsku6/Documents/rpa-email-system/app/api/routes.py) allow the user to:
-
-- process the local email file
-- process matching Gmail messages
-- list stored orders
-- inspect processing history
-- get a report summary
-
-### 7. Track processing runs
-
-Every execution of `POST /process` creates a processing run with:
-
-- status
-- total lines read
-- total parsed orders
-- created orders
-- updated existing orders
-- ignored lines
-- failed items
-- start and finish timestamps
-
-### 8. Generate report files
-
-[generator.py](C:/Users/wsku6/Documents/rpa-email-system/app/reports/generator.py) creates TXT and CSV files based on the stored orders.
+```json
+{
+  "run_id": 15,
+  "status": "completed",
+  "message": "Emails processed successfully.",
+  "source": "gmail",
+  "total_read": 1,
+  "total_parsed": 1,
+  "created": 0,
+  "updated": 1,
+  "duplicates": 1,
+  "ignored": 0,
+  "failed": 0,
+  "started_at": "2026-05-14T01:24:45.931336",
+  "finished_at": "2026-05-14T01:24:46.136824"
+}
+```
 
 ## Environment Variables
 
-Create a `.env` file in the root of the project:
+Use `.env.example` as a reference:
 
 ```env
 DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/mailflow
 DB_ECHO=false
 LOG_LEVEL=INFO
+
 GMAIL_QUERY=subject:Pedido newer_than:7d
 GMAIL_MAX_RESULTS=10
 GMAIL_CREDENTIALS_FILE=credentials.json
@@ -152,186 +129,120 @@ GMAIL_CREDENTIALS_JSON=
 GMAIL_TOKEN_JSON=
 ```
 
-Gmail credentials can be loaded from local files during development or from `GMAIL_CREDENTIALS_JSON` and `GMAIL_TOKEN_JSON` in hosted environments. Secrets must not be committed to the repository.
-
-## PostgreSQL Setup
-
-Make sure PostgreSQL is running locally and create the database:
-
-```sql
-CREATE DATABASE mailflow;
-```
-
-Then initialize the tables:
-
-```powershell
-alembic upgrade head
-```
+For hosted environments, prefer `GMAIL_CREDENTIALS_JSON` and `GMAIL_TOKEN_JSON` instead of local credential files.
 
 ## Local Setup
 
-### 1. Create the virtual environment
+Create and activate the virtual environment:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-### 2. Install dependencies
+Install dependencies:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-### 3. Start the API
+Run migrations:
+
+```powershell
+alembic upgrade head
+```
+
+Start the API:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-Available URLs:
+Local docs:
 
-- `http://127.0.0.1:8000`
-- `http://127.0.0.1:8000/docs`
+```text
+http://127.0.0.1:8000/docs
+```
 
 ## Docker Setup
 
-Start the API and PostgreSQL with Docker Compose:
+Start the API and PostgreSQL:
 
 ```powershell
 docker compose up --build
 ```
 
-The API container runs database migrations automatically before starting Uvicorn.
-
-Available URLs:
-
-- `http://127.0.0.1:8000`
-- `http://127.0.0.1:8000/docs`
-
-For Gmail processing in Docker, keep `credentials.json` and `token.json` in the project root. Both files are ignored by Git.
-
-## Production Deployment
-
-The application is ready to run as a Docker web service with a managed PostgreSQL database.
-
-Recommended production settings:
-
-```env
-DATABASE_URL=postgresql+psycopg2://USER:PASSWORD@HOST:PORT/DATABASE
-DB_ECHO=false
-LOG_LEVEL=INFO
-GMAIL_QUERY=subject:Pedido newer_than:7d
-GMAIL_MAX_RESULTS=10
-GMAIL_CREDENTIALS_JSON={...}
-GMAIL_TOKEN_JSON={...}
-```
-
-The Docker start command runs migrations before starting the API:
+The API container runs migrations before starting Uvicorn:
 
 ```text
 alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## Example Input
+## Gmail Setup
 
-Place sample content inside `emails.txt`:
-
-```text
-Pedido #101 - Cliente Ana - Valor 320
-Pedido #102 - Cliente Bruno - Valor R$450,90
-Pedido #103 - Cliente Carla - Valor
-```
-
-## API Endpoints
-
-### `POST /process`
-
-Reads `emails.txt`, parses the entries, normalizes the data, and stores the orders in the database.
-
-Example response:
-
-```json
-{
-  "run_id": 15,
-  "status": "completed",
-  "message": "Emails processed successfully.",
-  "total_read": 3,
-  "total_parsed": 2,
-  "created": 2,
-  "updated": 1,
-  "duplicates": 1,
-  "ignored": 1,
-  "failed": 0,
-  "started_at": "2026-05-13T10:00:00",
-  "finished_at": "2026-05-13T10:00:01"
-}
-```
-
-### `POST /process/gmail`
-
-Fetches matching Gmail messages, extracts their text content, parses orders, and stores the results in the database.
-
-The Gmail reader uses the read-only Gmail scope:
+The Gmail integration uses this read-only scope:
 
 ```text
 https://www.googleapis.com/auth/gmail.readonly
 ```
 
-Before running this endpoint, create OAuth credentials in Google Cloud, enable the Gmail API, and place the downloaded OAuth client file at the path configured by `GMAIL_CREDENTIALS_FILE`.
+For local development:
 
-### `GET /orders`
+1. Enable the Gmail API in Google Cloud.
+2. Create OAuth credentials for a desktop app.
+3. Save the OAuth file as `credentials.json`.
+4. Run `POST /process/gmail` once to generate `token.json`.
 
-Returns all saved orders.
+For production:
 
-### `GET /reports`
+1. Keep Gmail OAuth secrets out of Git.
+2. Store credential and token JSON as environment variables.
+3. Configure `GMAIL_CREDENTIALS_JSON` and `GMAIL_TOKEN_JSON` in the host platform.
 
-Returns a summary with:
+## Reports
 
-- total number of orders
-- total order value
-- number of orders without value
-
-### `GET /processing-runs`
-
-Returns the history of processing executions.
-
-### `GET /processing-runs/{run_id}`
-
-Returns the metrics and status of a specific processing execution.
-
-## Report Files
-
-To generate TXT and CSV reports manually:
+Generate TXT and CSV reports manually:
 
 ```powershell
 python -m app.reports.generator
 ```
 
-The files are generated based on the records already stored in the database.
+Generated files are ignored by Git.
 
-## Running Tests
+## Tests
+
+Run the test suite:
 
 ```powershell
 pytest
 ```
 
+Current coverage includes parser behavior, database flow, reports, Gmail body extraction, API endpoints, and processing pipeline behavior.
+
+## Production
+
+The project is deployed on Render:
+
+[https://mailflow-parser.onrender.com/docs](https://mailflow-parser.onrender.com/docs)
+
+Production uses:
+
+- Docker web service
+- managed PostgreSQL
+- Alembic migrations on startup
+- environment-based secrets
+- structured application logs
+
 ## Engineering Highlights
 
-This project demonstrates backend practices such as:
-
-- API development with FastAPI
-- ORM-based persistence with SQLAlchemy
-- PostgreSQL-ready database configuration
-- schema versioning with Alembic
-- containerized local production setup with Docker Compose
-- layered architecture with API, services, parser, schemas, and reports
-- external API integration with Gmail
-- semi-structured data parsing and normalization
-- duplicate handling and update behavior for existing orders
-- processing audit trail with execution status and metrics
-- structured logging and JSON error responses
-- automated tests covering parser, reports, database flow, API endpoints, and pipeline behavior
+- Layered architecture with API, services, parser, schemas, reports, and persistence
+- Audit trail for each processing execution
+- Duplicate-safe order persistence
+- External API integration with Gmail
+- Schema versioning with Alembic
+- Containerized deployment
+- CI pipeline with GitHub Actions
+- Production deployment with public API documentation
 
 ## License
 
