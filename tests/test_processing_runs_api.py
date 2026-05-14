@@ -90,6 +90,26 @@ def test_process_updates_existing_order_and_tracks_run(client, session, monkeypa
     assert order.value == 250
 
 
+def test_process_gmail_creates_processing_run(client, session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.order_pipeline.read_gmail_messages",
+        lambda: "Pedido #201 - Cliente Gmail Buyer - Valor 700",
+    )
+
+    response = client.post("/process/gmail")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["source"] == "gmail"
+    assert data["created"] == 1
+    assert data["total_parsed"] == 1
+
+    order = session.query(Order).first()
+    assert order.number == 201
+    assert order.client == "Gmail Buyer"
+
+
 def test_get_processing_runs(client, session):
     session.add(ProcessingRun(status="completed", total_read=1, total_parsed=1))
     session.commit()

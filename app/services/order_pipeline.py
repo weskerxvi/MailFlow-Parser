@@ -6,12 +6,13 @@ from sqlalchemy.orm import Session
 from app.email_reader import email_reader
 from app.models import Order, ProcessingRun
 from app.parser import extract_data
+from app.services.gmail_reader import read_gmail_messages
 from app.services.normalize_order import normalize_order
 
 logger = logging.getLogger(__name__)
 
 
-def process_orders_from_email(db: Session) -> dict:
+def process_orders(db: Session, raw_text: str, source: str) -> dict:
     started_at = datetime.now(timezone.utc)
     run = ProcessingRun(status="running", started_at=started_at)
     db.add(run)
@@ -19,13 +20,13 @@ def process_orders_from_email(db: Session) -> dict:
     db.refresh(run)
     run_id = run.id
 
-    emails = email_reader()
-    total_read = len([line for line in emails.splitlines() if line.strip()])
+    total_read = len([line for line in raw_text.splitlines() if line.strip()])
     updated = 0
     created = 0
     failed = 0
-    parsed = extract_data(emails)
+    parsed = extract_data(raw_text)
     ignored = total_read - len(parsed)
+    processed_orders = {}
 
     try:
         for item in parsed:
@@ -37,15 +38,19 @@ def process_orders_from_email(db: Session) -> dict:
                 logger.exception("Failed to normalize parsed order: %s", item)
                 continue
 
-            existing_order = db.query(Order).filter(
-                Order.number == order_number
-            ).first()
+            existing_order = processed_orders.get(order_number)
+
+            if not existing_order:
+                existing_order = db.query(Order).filter(
+                    Order.number == order_number
+                ).first()
 
             if existing_order:
                 logger.info("Updated existing order: %s", order_number)
                 existing_order.client = normalized["client"]
                 existing_order.value = normalized["value"]
                 updated += 1
+                processed_orders[order_number] = existing_order
                 continue
 
             order = Order(
@@ -55,6 +60,7 @@ def process_orders_from_email(db: Session) -> dict:
             )
 
             db.add(order)
+            processed_orders[order_number] = order
             created += 1
 
         run.status = "completed"
@@ -88,6 +94,7 @@ def process_orders_from_email(db: Session) -> dict:
         "run_id": run.id,
         "status": run.status,
         "message": "Emails processed successfully.",
+        "source": source,
         "total_read": run.total_read,
         "total_parsed": run.total_parsed,
         "created": created,
@@ -98,3 +105,13 @@ def process_orders_from_email(db: Session) -> dict:
         "started_at": run.started_at,
         "finished_at": run.finished_at,
     }
+
+
+def process_orders_from_email(db: Session) -> dict:
+    emails = email_reader()
+    return process_orders(db=db, raw_text=emails, source="local")
+
+
+def process_orders_from_gmail(db: Session) -> dict:
+    emails = read_gmail_messages()
+    return process_orders(db=db, raw_text=emails, source="gmail")

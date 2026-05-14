@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Order, ProcessingRun
 from app.schemas import OrderSchema, ProcessingRunSchema
-from app.services.order_pipeline import process_orders_from_email
+from app.services.order_pipeline import (
+    process_orders_from_email,
+    process_orders_from_gmail,
+)
 from app.services.reports import generate_report
 
 router = APIRouter()
@@ -17,6 +20,12 @@ def get_orders(db: Session = Depends(get_db)):
 @router.post("/process")
 def process_emails(db: Session = Depends(get_db)):
     return process_orders_from_email(db)
+
+
+@router.post("/process/gmail")
+def process_gmail_emails(db: Session = Depends(get_db)):
+    return process_orders_from_gmail(db)
+
 
 @router.get("/reports")
 def get_report(db: Session = Depends(get_db)):

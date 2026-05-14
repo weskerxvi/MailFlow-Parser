@@ -38,10 +38,12 @@ It then:
 - Pydantic
 - pytest
 - python-dotenv
+- Gmail API
 
 ## Current Features
 
 - Read raw order data from `emails.txt`
+- Read order messages from Gmail through the Gmail API
 - Parse orders using regex
 - Normalize client and value fields
 - Store orders in PostgreSQL
@@ -62,6 +64,7 @@ rpa-email-system/
 |   |-- reports/
 |   |   `-- generator.py
 |   |-- services/
+|   |   |-- gmail_reader.py
 |   |   |-- normalize_order.py
 |   |   |-- order_pipeline.py
 |   |   `-- reports.py
@@ -82,7 +85,7 @@ rpa-email-system/
 
 ### 1. Read input
 
-The application reads text from `emails.txt` through [email_reader.py](C:/Users/wsku6/Documents/rpa-email-system/app/email_reader.py).
+The application can read text from `emails.txt` through [email_reader.py](C:/Users/wsku6/Documents/rpa-email-system/app/email_reader.py) or fetch matching messages from Gmail through [gmail_reader.py](C:/Users/wsku6/Documents/rpa-email-system/app/services/gmail_reader.py).
 
 ### 2. Parse the message
 
@@ -109,6 +112,7 @@ The database connection is configured in [database.py](C:/Users/wsku6/Documents/
 The routes in [routes.py](C:/Users/wsku6/Documents/rpa-email-system/app/api/routes.py) allow the user to:
 
 - process the local email file
+- process matching Gmail messages
 - list stored orders
 - inspect processing history
 - get a report summary
@@ -137,7 +141,13 @@ Create a `.env` file in the root of the project:
 ```env
 DATABASE_URL=postgresql+psycopg2://postgres:YOUR_PASSWORD@localhost:5432/mailflow
 DB_ECHO=false
+GMAIL_QUERY=subject:Pedido newer_than:7d
+GMAIL_MAX_RESULTS=10
+GMAIL_CREDENTIALS_FILE=credentials.json
+GMAIL_TOKEN_FILE=token.json
 ```
+
+Gmail credentials are intentionally loaded from local files and must not be committed to the repository.
 
 ## PostgreSQL Setup
 
@@ -214,6 +224,18 @@ Example response:
 }
 ```
 
+### `POST /process/gmail`
+
+Fetches matching Gmail messages, extracts their text content, parses orders, and stores the results in the database.
+
+The Gmail reader uses the read-only Gmail scope:
+
+```text
+https://www.googleapis.com/auth/gmail.readonly
+```
+
+Before running this endpoint, create OAuth credentials in Google Cloud, enable the Gmail API, and place the downloaded OAuth client file at the path configured by `GMAIL_CREDENTIALS_FILE`.
+
 ### `GET /orders`
 
 Returns all saved orders.
@@ -258,18 +280,11 @@ This project demonstrates backend practices such as:
 - ORM-based persistence with SQLAlchemy
 - PostgreSQL-ready database configuration
 - layered architecture with API, services, parser, schemas, and reports
+- external API integration with Gmail
 - semi-structured data parsing and normalization
 - duplicate handling and update behavior for existing orders
 - processing audit trail with execution status and metrics
 - automated tests covering parser, reports, database flow, API endpoints, and pipeline behavior
-
-## Technical Roadmap
-
-- Add Alembic migrations for schema versioning
-- Add structured logging for processing runs and API requests
-- Expand API response schemas for stronger contracts
-- Add item-level processing error records
-- Containerize the application with Docker and PostgreSQL
 
 ## License
 
