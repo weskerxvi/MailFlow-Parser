@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
+from app.exceptions import ExternalServiceError
 from app.main import app
 from app.models import Order, ProcessingRun
 
@@ -108,6 +109,23 @@ def test_process_gmail_creates_processing_run(client, session, monkeypatch):
     order = session.query(Order).first()
     assert order.number == 201
     assert order.client == "Gmail Buyer"
+
+
+def test_process_gmail_returns_service_error(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.order_pipeline.read_gmail_messages",
+        lambda: (_ for _ in ()).throw(
+            ExternalServiceError("Gmail API request failed.")
+        ),
+    )
+
+    response = client.post("/process/gmail")
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "detail": "Gmail API request failed.",
+        "code": "external_service_error",
+    }
 
 
 def test_get_processing_runs(client, session):

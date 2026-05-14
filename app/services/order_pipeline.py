@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def process_orders(db: Session, raw_text: str, source: str) -> dict:
+    logger.info("Starting order processing from source=%s", source)
     started_at = datetime.now(timezone.utc)
     run = ProcessingRun(status="running", started_at=started_at)
     db.add(run)
@@ -72,6 +73,15 @@ def process_orders(db: Session, raw_text: str, source: str) -> dict:
         run.failed = failed
         run.finished_at = datetime.now(timezone.utc)
         db.commit()
+        logger.info(
+            "Completed order processing run_id=%s source=%s created=%s updated=%s ignored=%s failed=%s",
+            run.id,
+            source,
+            created,
+            updated,
+            ignored,
+            failed,
+        )
     except Exception:
         db.rollback()
         run = db.get(ProcessingRun, run_id)
@@ -86,6 +96,7 @@ def process_orders(db: Session, raw_text: str, source: str) -> dict:
             run.error_message = "Processing transaction failed."
             run.finished_at = datetime.now(timezone.utc)
             db.commit()
+        logger.exception("Order processing transaction failed for source=%s", source)
         raise
 
     db.refresh(run)

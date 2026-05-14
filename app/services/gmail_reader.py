@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 from pathlib import Path
 
@@ -6,12 +7,16 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+from app.exceptions import ConfigurationError, ExternalServiceError
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 DEFAULT_QUERY = os.getenv("GMAIL_QUERY", "subject:Pedido newer_than:7d")
 DEFAULT_MAX_RESULTS = int(os.getenv("GMAIL_MAX_RESULTS", "10"))
 USER_ID = "me"
+logger = logging.getLogger(__name__)
 
 
 def get_gmail_service():
@@ -23,30 +28,34 @@ def read_gmail_messages(
     query: str = DEFAULT_QUERY,
     max_results: int = DEFAULT_MAX_RESULTS,
 ) -> str:
-    service = get_gmail_service()
-
-    response = (
-        service.users()
-        .messages()
-        .list(userId=USER_ID, q=query, maxResults=max_results)
-        .execute()
-    )
-    messages = response.get("messages", [])
-    bodies = []
-
-    for message in messages:
-        message_data = (
+    try:
+        service = get_gmail_service()
+        response = (
             service.users()
             .messages()
-            .get(userId=USER_ID, id=message["id"], format="full")
+            .list(userId=USER_ID, q=query, maxResults=max_results)
             .execute()
         )
-        body = extract_message_body(message_data)
+        messages = response.get("messages", [])
+        bodies = []
 
-        if body:
-            bodies.append(body)
+        for message in messages:
+            message_data = (
+                service.users()
+                .messages()
+                .get(userId=USER_ID, id=message["id"], format="full")
+                .execute()
+            )
+            body = extract_message_body(message_data)
 
-    return "\n".join(bodies)
+            if body:
+                bodies.append(body)
+
+        logger.info("Fetched %s Gmail messages for query '%s'", len(messages), query)
+        return "\n".join(bodies)
+    except HttpError as exc:
+        logger.exception("Gmail API request failed")
+        raise ExternalServiceError("Gmail API request failed.") from exc
 
 
 def extract_message_body(message_data: dict) -> str:
@@ -59,8 +68,14 @@ def _load_credentials() -> Credentials:
     credentials_path = Path(os.getenv("GMAIL_CREDENTIALS_FILE", "credentials.json"))
     credentials = None
 
+    if not credentials_path.exists() and not token_path.exists():
+        raise ConfigurationError("Gmail credentials file was not found.")
+
     if token_path.exists():
-        credentials = Credentials.from_authorized_user_file(token_path, SCOPES)
+        try:
+            credentials = Credentials.from_authorized_user_file(token_path, SCOPES)
+        except ValueError as exc:
+            raise ConfigurationError("Gmail token file is invalid.") from exc
 
     if credentials and credentials.valid:
         return credentials
@@ -68,6 +83,8 @@ def _load_credentials() -> Credentials:
     if credentials and credentials.expired and credentials.refresh_token:
         credentials.refresh(Request())
     else:
+        if not credentials_path.exists():
+            raise ConfigurationError("Gmail credentials file was not found.")
         flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
         credentials = flow.run_local_server(port=0)
 
