@@ -1,0 +1,39 @@
+services:
+  api:
+    build: .
+    container_name: mailflow-api
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/mailflow
+      LOG_LEVEL: INFO
+      GMAIL_CREDENTIALS_FILE: /app/credentials.json
+      GMAIL_TOKEN_FILE: /app/token.json
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro
+      - ./token.json:/app/token.json
+
+  db:
+    image: postgres:16-alpine
+    container_name: mailflow-db
+    environment:
+      POSTGRES_DB: mailflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mailflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

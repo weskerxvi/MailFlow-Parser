@@ -39,6 +39,8 @@ It then:
 - pytest
 - python-dotenv
 - Gmail API
+- Alembic
+- Docker
 
 ## Current Features
 
@@ -139,8 +141,9 @@ Every execution of `POST /process` creates a processing run with:
 Create a `.env` file in the root of the project:
 
 ```env
-DATABASE_URL=postgresql+psycopg2://postgres:YOUR_PASSWORD@localhost:5432/mailflow
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/mailflow
 DB_ECHO=false
+LOG_LEVEL=INFO
 GMAIL_QUERY=subject:Pedido newer_than:7d
 GMAIL_MAX_RESULTS=10
 GMAIL_CREDENTIALS_FILE=credentials.json
@@ -160,7 +163,7 @@ CREATE DATABASE mailflow;
 Then initialize the tables:
 
 ```powershell
-python -m app.init_db
+alembic upgrade head
 ```
 
 ## Local Setup
@@ -188,6 +191,23 @@ Available URLs:
 
 - `http://127.0.0.1:8000`
 - `http://127.0.0.1:8000/docs`
+
+## Docker Setup
+
+Start the API and PostgreSQL with Docker Compose:
+
+```powershell
+docker compose up --build
+```
+
+The API container runs database migrations automatically before starting Uvicorn.
+
+Available URLs:
+
+- `http://127.0.0.1:8000`
+- `http://127.0.0.1:8000/docs`
+
+For Gmail processing in Docker, keep `credentials.json` and `token.json` in the project root. Both files are ignored by Git.
 
 ## Example Input
 
@@ -279,11 +299,14 @@ This project demonstrates backend practices such as:
 - API development with FastAPI
 - ORM-based persistence with SQLAlchemy
 - PostgreSQL-ready database configuration
+- schema versioning with Alembic
+- containerized local production setup with Docker Compose
 - layered architecture with API, services, parser, schemas, and reports
 - external API integration with Gmail
 - semi-structured data parsing and normalization
 - duplicate handling and update behavior for existing orders
 - processing audit trail with execution status and metrics
+- structured logging and JSON error responses
 - automated tests covering parser, reports, database flow, API endpoints, and pipeline behavior
 
 ## License
