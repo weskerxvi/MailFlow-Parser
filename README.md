@@ -1,8 +1,35 @@
 # MailFlow Parser
 
+![CI](https://github.com/weskerxvi/MailFlow-Parser/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
+![Deploy](https://img.shields.io/badge/Deploy-Render-7B61FF)
+
 MailFlow Parser is a FastAPI backend for processing order data from local email-like text files and Gmail messages. It extracts semi-structured order information, normalizes the data, persists records in PostgreSQL, tracks each processing run, and exposes operational reports through a REST API.
 
-[Live API Docs](https://mailflow-parser.onrender.com/docs)
+**Live API:** [https://mailflow-parser.onrender.com/docs](https://mailflow-parser.onrender.com/docs)
+
+## Demo
+
+> Place the screenshots and GIFs in the `assets/` folder using the exact names below.
+
+![Swagger API documentation](assets/swagger-docs.png)
+
+![Processing history endpoint](assets/processing-runs.png)
+
+![Gmail processing demo](assets/gmail-process.gif)
+
+Recommended assets:
+
+| File | What to Capture |
+| --- | --- |
+| `assets/swagger-docs.png` | Render Swagger page open at `/docs`. |
+| `assets/processing-runs.png` | Response from `GET /processing-runs`. |
+| `assets/gmail-process.gif` | Short flow: execute `POST /process/gmail`, then check `/orders`. |
+| `assets/render-service.png` | Render dashboard showing successful deploy. Optional. |
+| `assets/github-actions.png` | GitHub Actions CI passing. Optional. |
 
 ## Overview
 
@@ -40,16 +67,15 @@ It then:
 
 ## Tech Stack
 
-- Python
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- Pydantic
-- Alembic
-- Gmail API
-- Docker
-- pytest
-- GitHub Actions
+| Area | Tools |
+| --- | --- |
+| API | FastAPI, Pydantic |
+| Persistence | PostgreSQL, SQLAlchemy |
+| Migrations | Alembic |
+| Integrations | Gmail API |
+| Runtime | Python 3.12 |
+| DevOps | Docker, Docker Compose, Render |
+| Quality | pytest, GitHub Actions |
 
 ## Architecture
 
@@ -75,11 +101,19 @@ rpa-email-system/
 |   `-- schemas.py
 |-- migrations/
 |-- tests/
+|-- assets/
+|-- docs/
 |-- Dockerfile
 |-- docker-compose.yml
 |-- alembic.ini
 `-- requirements.txt
 ```
+
+More details:
+
+- [Architecture Notes](docs/architecture.md)
+- [Deployment Notes](docs/deployment.md)
+- [Gmail Setup](docs/gmail-setup.md)
 
 ## API Endpoints
 
@@ -133,28 +167,11 @@ For hosted environments, prefer `GMAIL_CREDENTIALS_JSON` and `GMAIL_TOKEN_JSON` 
 
 ## Local Setup
 
-Create and activate the virtual environment:
-
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```powershell
 pip install -r requirements.txt
-```
-
-Run migrations:
-
-```powershell
 alembic upgrade head
-```
-
-Start the API:
-
-```powershell
 uvicorn app.main:app --reload
 ```
 
@@ -166,8 +183,6 @@ http://127.0.0.1:8000/docs
 
 ## Docker Setup
 
-Start the API and PostgreSQL:
-
 ```powershell
 docker compose up --build
 ```
@@ -178,40 +193,7 @@ The API container runs migrations before starting Uvicorn:
 alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## Gmail Setup
-
-The Gmail integration uses this read-only scope:
-
-```text
-https://www.googleapis.com/auth/gmail.readonly
-```
-
-For local development:
-
-1. Enable the Gmail API in Google Cloud.
-2. Create OAuth credentials for a desktop app.
-3. Save the OAuth file as `credentials.json`.
-4. Run `POST /process/gmail` once to generate `token.json`.
-
-For production:
-
-1. Keep Gmail OAuth secrets out of Git.
-2. Store credential and token JSON as environment variables.
-3. Configure `GMAIL_CREDENTIALS_JSON` and `GMAIL_TOKEN_JSON` in the host platform.
-
-## Reports
-
-Generate TXT and CSV reports manually:
-
-```powershell
-python -m app.reports.generator
-```
-
-Generated files are ignored by Git.
-
 ## Tests
-
-Run the test suite:
 
 ```powershell
 pytest
