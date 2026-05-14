@@ -4,6 +4,7 @@ sqlalchemy
 pydantic
 pytest
 httpx
+alembic
 python-dotenv
 psycopg2-binary
 google-api-python-client
