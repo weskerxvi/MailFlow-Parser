@@ -13,23 +13,12 @@ MailFlow Parser is a FastAPI backend for processing order data from local email-
 
 ## Demo
 
-> Place the screenshots and GIFs in the `assets/` folder using the exact names below.
-
 ![Swagger API documentation](assets/swagger-docs.png)
 
 ![Processing history endpoint](assets/processing-runs.png)
 
 ![Gmail processing demo](assets/gmail-process.gif)
 
-Recommended assets:
-
-| File | What to Capture |
-| --- | --- |
-| `assets/swagger-docs.png` | Render Swagger page open at `/docs`. |
-| `assets/processing-runs.png` | Response from `GET /processing-runs`. |
-| `assets/gmail-process.gif` | Short flow: execute `POST /process/gmail`, then check `/orders`. |
-| `assets/render-service.png` | Render dashboard showing successful deploy. Optional. |
-| `assets/github-actions.png` | GitHub Actions CI passing. Optional. |
 
 ## Overview
 
